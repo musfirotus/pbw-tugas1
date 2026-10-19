@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Masuk ke SITTA, aplikasi pemesanan dan distribusi bahan ajar Universitas Terbuka.">
+  <title>Masuk | SITTA</title>
+  <link rel="icon" href="assets/logo-sitta.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+
+  <!-- CSS internal: khusus tata letak halaman login -->
+  <style>
+    .login-page {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1.05fr 1fr;
+    }
+    .login-aside {
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 2.5rem 3rem;
+      background: var(--forest);
+      color: #f2efe6;
+    }
+    .login-aside::after {
+      /* tumpukan "buku" dekoratif di pojok kanan bawah */
+      content: "";
+      position: absolute;
+      right: -150px;
+      bottom: -40px;
+      width: 340px;
+      height: 260px;
+      background:
+        linear-gradient(var(--clay), var(--clay)) 40px 0 / 220px 46px no-repeat,
+        linear-gradient(#e8dcc6, #e8dcc6) 20px 60px / 260px 46px no-repeat,
+        linear-gradient(#f6f1e7, #f6f1e7) 0 120px / 300px 46px no-repeat,
+        linear-gradient(#2f6b52, #2f6b52) 30px 180px / 280px 46px no-repeat;
+      border-radius: 6px;
+      opacity: .9;
+      transform: rotate(-8deg);
+    }
+    [data-theme="dark"] .login-aside { background: #0e1411; }
+    .login-aside .brand strong { font-size: 1.6rem; }
+    .login-aside h1 { font-size: clamp(1.9rem, 3.4vw, 2.7rem); max-width: 14ch; margin-top: 2rem; }
+    .login-aside p { max-width: 40ch; opacity: .85; }
+    .login-aside .facts { display: flex; gap: 2rem; margin-top: 1.5rem; position: relative; z-index: 1; }
+    .login-aside .facts b { display: block; font-family: var(--font-head); font-size: 1.6rem; }
+    .login-aside .facts span { font-size: .8rem; opacity: .75; }
+
+    .login-main { display: grid; place-items: center; padding: 2rem 1.25rem; }
+    .login-card { width: min(420px, 100%); }
+    .login-card .top-actions { display: flex; justify-content: flex-end; margin-bottom: 1.5rem; }
+    .login-card .row-between { display: flex; justify-content: space-between; align-items: center; margin: -.2rem 0 1.2rem; }
+    .demo-box { margin-top: 1.5rem; padding: .9rem 1rem; border: 1px dashed var(--line); border-radius: 12px; font-size: .85rem; }
+    .demo-box code { background: var(--sand); padding: .1em .4em; border-radius: 6px; font-size: .82rem; }
+    .lock-note { color: var(--danger); font-size: .85rem; margin-top: .6rem; }
+    .shake { animation: shake .4s; }
+    @keyframes shake {
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+
+    @media (max-width: 860px) {
+      .login-page { grid-template-columns: 1fr; }
+      .login-aside { padding: 1.6rem 1.4rem 2rem; }
+      .login-aside::after, .login-aside .facts { display: none; }
+      .login-aside h1 { margin-top: 1rem; }
+    }
+  </style>
+
+  <script src="js/data.js" defer></script>
+  <script src="js/script.js" defer></script>
+</head>
+<body data-page="login">
+  <div class="login-page">
+    <aside class="login-aside" aria-label="Tentang SITTA">
+      <div>
+        <a class="brand" href="index.html">
+          <img src="assets/logo-sitta.svg" alt="" width="44" height="44">
+          <div>
+            <strong>SITTA</strong>
+            <span>Sistem Informasi Tiras &amp; Transaksi Bahan Ajar</span>
+          </div>
+        </a>
+        <h1>Bahan ajar sampai ke mahasiswa, tanpa tebak-tebakan.</h1>
+        <p>Pantau stok modul di tiap lokasi, lacak paket kiriman per nomor DO, dan rekap transaksi dari satu tempat.</p>
+      </div>
+      <div class="facts" id="loginFacts">
+        <!-- angka diisi oleh JavaScript dari data.js -->
+      </div>
+    </aside>
+
+    <main class="login-main">
+      <section class="login-card" aria-labelledby="loginTitle">
+        <div class="top-actions">
+          <button type="button" class="icon-btn" data-theme-toggle aria-label="Ganti mode terang/gelap">🌙</button>
+        </div>
+
+        <h2 id="loginTitle" style="font-size: 1.8rem; margin-bottom: .2rem;">Masuk ke akun</h2>
+        <p class="muted">Pakai email dan kata sandi yang terdaftar di UT.</p>
+
+        <form id="loginForm" novalidate>
+          <div class="field">
+            <label for="loginEmail">Email</label>
+            <input class="input" type="email" id="loginEmail" name="email" autocomplete="username" placeholder="nama@ut.ac.id" aria-describedby="loginEmailErr">
+            <p class="error-msg" id="loginEmailErr" role="alert"></p>
+          </div>
+
+          <div class="field">
+            <label for="loginPass">Password</label>
+            <div class="input-group">
+              <input class="input" type="password" id="loginPass" name="password" autocomplete="current-password" placeholder="Minimal 6 karakter" aria-describedby="loginPassErr">
+              <button type="button" class="toggle-pass" data-toggle-pass="loginPass" aria-label="Tampilkan password">Lihat</button>
+            </div>
+            <p class="error-msg" id="loginPassErr" role="alert"></p>
+          </div>
+
+          <div class="row-between">
+            <label class="check"><input type="checkbox" id="rememberEmail"> Ingat email saya</label>
+            <button type="button" class="btn-link" data-open-modal="modalLupa">Lupa Password?</button>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block" id="btnLogin">Login</button>
+          <p class="lock-note" id="lockNote" hidden></p>
+        </form>
+
+        <p style="text-align: center; margin-top: 1.2rem;">
+          Belum punya akun?
+          <button type="button" class="btn-link" data-open-modal="modalDaftar">Daftar</button>
+        </p>
+
+        <details class="demo-box">
+          <summary><strong>Akun uji coba</strong> (dari data.js)</summary>
+          <p class="small muted" style="margin: .6rem 0 .3rem;">Klik salah satu untuk mengisi form otomatis.</p>
+          <ul id="demoAccounts" style="margin: 0; padding-left: 1.1rem;"></ul>
+        </details>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal: Lupa Password -->
+  <div class="modal" id="modalLupa" role="dialog" aria-modal="true" aria-labelledby="lupaTitle" hidden>
+    <div class="modal-box">
+      <div class="modal-head">
+        <div>
+          <h2 id="lupaTitle">Lupa password</h2>
+          <p class="muted small" style="margin: .3rem 0 0;">Masukkan email akunmu. Kami kirim tautan untuk membuat password baru.</p>
+        </div>
+        <button type="button" class="modal-close" data-close-modal aria-label="Tutup">&times;</button>
+      </div>
+      <form id="lupaForm" novalidate>
+        <div class="field">
+          <label for="lupaEmail">Email terdaftar</label>
+          <input class="input" type="email" id="lupaEmail" placeholder="nama@ut.ac.id" aria-describedby="lupaEmailErr">
+          <p class="error-msg" id="lupaEmailErr" role="alert"></p>
+        </div>
+        <div id="lupaResult" hidden></div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" data-close-modal>Batal</button>
+          <button type="submit" class="btn btn-primary">Kirim tautan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Daftar akun baru -->
+  <div class="modal" id="modalDaftar" role="dialog" aria-modal="true" aria-labelledby="daftarTitle" hidden>
+    <div class="modal-box wide">
+      <div class="modal-head">
+        <div>
+          <h2 id="daftarTitle">Daftar akun</h2>
+          <p class="muted small" style="margin: .3rem 0 0;">Akun baru tersimpan di browser ini (localStorage), jadi bisa langsung dipakai untuk login.</p>
+        </div>
+        <button type="button" class="modal-close" data-close-modal aria-label="Tutup">&times;</button>
+      </div>
+      <form id="daftarForm" novalidate>
+        <div class="field">
+          <label for="regNama">Nama lengkap</label>
+          <input class="input" type="text" id="regNama" autocomplete="name" aria-describedby="regNamaErr">
+          <p class="error-msg" id="regNamaErr" role="alert"></p>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label for="regEmail">Email</label>
+            <input class="input" type="email" id="regEmail" autocomplete="email" placeholder="nama@ut.ac.id" aria-describedby="regEmailErr">
+            <p class="error-msg" id="regEmailErr" role="alert"></p>
+          </div>
+          <div class="field">
+            <label for="regRole">Peran</label>
+            <select class="input" id="regRole" aria-describedby="regRoleErr">
+              <option value="">Pilih peran</option>
+              <option>UPBJJ-UT</option>
+              <option>Puslaba</option>
+              <option>Fakultas</option>
+            </select>
+            <p class="error-msg" id="regRoleErr" role="alert"></p>
+          </div>
+        </div>
+        <div class="field">
+          <label for="regLokasi">Lokasi / unit kerja</label>
+          <input class="input" type="text" id="regLokasi" placeholder="contoh: UPBJJ Surabaya" aria-describedby="regLokasiErr">
+          <p class="error-msg" id="regLokasiErr" role="alert"></p>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label for="regPass">Password</label>
+            <div class="input-group">
+              <input class="input" type="password" id="regPass" autocomplete="new-password" aria-describedby="regPassErr regPassHint">
+              <button type="button" class="toggle-pass" data-toggle-pass="regPass" aria-label="Tampilkan password">Lihat</button>
+            </div>
+            <span class="hint" id="regPassHint">Min. 6 karakter, ada huruf dan angka.</span>
+            <p class="error-msg" id="regPassErr" role="alert"></p>
+          </div>
+          <div class="field">
+            <label for="regPass2">Ulangi password</label>
+            <input class="input" type="password" id="regPass2" autocomplete="new-password" aria-describedby="regPass2Err">
+            <p class="error-msg" id="regPass2Err" role="alert"></p>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" data-close-modal>Batal</button>
+          <button type="submit" class="btn btn-accent">Buat akun</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+</body>
+</html>

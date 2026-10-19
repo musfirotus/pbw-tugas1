@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Dashboard SITTA: ringkasan stok, pengiriman, dan laporan bahan ajar.">
+  <title>Dashboard | SITTA</title>
+  <link rel="icon" href="assets/logo-sitta.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+
+  <!-- CSS internal: komponen yang hanya ada di dashboard -->
+  <style>
+    .hero {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 1.5rem;
+      align-items: center;
+      padding: 1.6rem 1.8rem;
+      border-radius: 18px;
+      background: linear-gradient(120deg, var(--forest) 0%, var(--forest-2) 100%);
+      color: #f6f1e7;
+      box-shadow: var(--shadow);
+    }
+    [data-theme="dark"] .hero { background: linear-gradient(120deg, #1d3a2e, #24473a); }
+    .hero h1 { margin-bottom: .25rem; }
+    .hero p { margin: 0; opacity: .88; }
+    .hero .sky { font-size: 3.6rem; line-height: 1; filter: drop-shadow(0 4px 10px rgba(0, 0, 0, .2)); }
+    .hero .date { font-size: .9rem; opacity: .8; margin-top: .6rem; }
+
+    .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); gap: 1rem; }
+    .menu-tile {
+      display: flex; flex-direction: column; gap: .4rem;
+      padding: 1.2rem 1.3rem;
+      text-decoration: none; color: inherit;
+      transition: transform .18s, border-color .18s;
+    }
+    .menu-tile:hover { transform: translateY(-3px); border-color: var(--clay); }
+    .menu-tile .tile-ico {
+      width: 44px; height: 44px; border-radius: 12px;
+      display: grid; place-items: center; font-size: 1.35rem;
+      background: var(--clay-soft);
+    }
+    .menu-tile strong { font-size: 1.02rem; }
+    .menu-tile span { font-size: .85rem; color: var(--muted); }
+
+    .panel[hidden] { display: none; }
+    .bar-list { display: grid; gap: .8rem; }
+    .bar-item { display: grid; grid-template-columns: minmax(140px, 220px) 1fr 60px; gap: .8rem; align-items: center; font-size: .9rem; }
+    .bar-item .progress { height: 14px; }
+    .bar-item .progress > span.low { background: var(--danger); }
+    .split { display: grid; grid-template-columns: 1.4fr 1fr; gap: 1.4rem; }
+    .clickable-row { cursor: pointer; }
+
+    @media (max-width: 900px) {
+      .split { grid-template-columns: 1fr; }
+      .hero { grid-template-columns: 1fr; }
+      .hero .sky { display: none; }
+      .bar-item { grid-template-columns: 1fr 50px; }
+      .bar-item .progress { grid-column: 1 / -1; grid-row: 2; }
+    }
+  </style>
+
+  <script src="js/data.js" defer></script>
+  <script src="js/script.js" defer></script>
+</head>
+<body data-page="dashboard">
+  <div class="app">
+    <aside class="sidebar" id="sidebar" aria-label="Navigasi utama">
+      <a class="brand" href="dashboard.html">
+        <img src="assets/logo-sitta.svg" alt="" width="40" height="40">
+        <div><strong>SITTA</strong><span>Bahan Ajar UT</span></div>
+      </a>
+      <nav class="nav" aria-label="Menu samping">
+        <a href="dashboard.html" aria-current="page"><span class="ico" aria-hidden="true">🏠</span>Beranda</a>
+        <p class="nav-label">Menu utama</p>
+        <a href="stok.html"><span class="ico" aria-hidden="true">📚</span>Informasi Bahan Ajar</a>
+        <a href="tracking.html"><span class="ico" aria-hidden="true">🚚</span>Tracking Pengiriman</a>
+        <details open>
+          <summary><span class="ico" aria-hidden="true">📊</span>Laporan</summary>
+          <div class="sub">
+            <a href="dashboard.html#monitoring">Monitoring Progress DO</a>
+            <a href="dashboard.html#rekap">Rekap Bahan Ajar</a>
+          </div>
+        </details>
+        <a href="dashboard.html#histori"><span class="ico" aria-hidden="true">🧾</span>Histori Transaksi</a>
+      </nav>
+      <p class="sidebar-foot">Tugas Praktik 1 &middot; STSI4209</p>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <button type="button" class="icon-btn menu-toggle" data-menu-toggle aria-label="Buka menu" aria-controls="sidebar">☰</button>
+        <p class="page-title" id="pageTitle">Beranda</p>
+        <span class="spacer"></span>
+        <span class="clock" data-clock></span>
+        <button type="button" class="icon-btn" data-theme-toggle aria-label="Ganti mode terang/gelap">🌙</button>
+        <div class="user-chip">
+          <span class="avatar" data-user-initial>?</span>
+          <span class="who"><b data-user-name>-</b><small data-user-role>-</small></span>
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm" data-logout>Keluar</button>
+      </header>
+
+      <main class="content">
+        <!-- Panel BERANDA -->
+        <section class="panel" id="panel-beranda" aria-labelledby="greetTitle">
+          <div class="hero">
+            <div>
+              <h1 id="greetTitle">Selamat datang</h1>
+              <p id="greetSub">Memuat sapaan...</p>
+              <p class="date" id="greetDate"></p>
+            </div>
+            <div class="sky" id="greetIcon" aria-hidden="true">☀️</div>
+          </div>
+
+          <div class="stats" style="margin-top: 1.4rem;" id="dashStats"></div>
+
+          <h2 style="margin-top: 1.8rem;">Mau ke mana sekarang?</h2>
+          <nav class="menu-grid" aria-label="Pintasan menu">
+            <a class="card menu-tile" href="stok.html">
+              <span class="tile-ico" aria-hidden="true">📚</span>
+              <strong>Informasi Bahan Ajar</strong>
+              <span>Cek stok per lokasi dan tambah judul baru.</span>
+            </a>
+            <a class="card menu-tile" href="tracking.html">
+              <span class="tile-ico" aria-hidden="true">🚚</span>
+              <strong>Tracking Pengiriman</strong>
+              <span>Lacak paket dengan nomor Delivery Order.</span>
+            </a>
+            <a class="card menu-tile" href="#monitoring">
+              <span class="tile-ico" aria-hidden="true">📈</span>
+              <strong>Monitoring Progress DO</strong>
+              <span>Progres semua DO dalam satu tabel.</span>
+            </a>
+            <a class="card menu-tile" href="#rekap">
+              <span class="tile-ico" aria-hidden="true">🗂️</span>
+              <strong>Rekap Bahan Ajar</strong>
+              <span>Total stok dan judul yang mulai menipis.</span>
+            </a>
+            <a class="card menu-tile" href="#histori">
+              <span class="tile-ico" aria-hidden="true">🧾</span>
+              <strong>Histori Transaksi</strong>
+              <span>Daftar pengiriman beserta nilai transaksinya.</span>
+            </a>
+          </nav>
+        </section>
+
+        <!-- Panel LAPORAN: Monitoring Progress DO -->
+        <section class="panel card" id="panel-monitoring" aria-labelledby="monTitle" hidden>
+          <div class="card-head">
+            <div>
+              <h2 id="monTitle">Monitoring Progress DO</h2>
+              <p class="muted small" style="margin: 0;">Progres dihitung dari tahap terjauh yang tercatat di riwayat perjalanan paket. Klik baris untuk melihat detailnya.</p>
+            </div>
+            <a class="btn btn-ghost btn-sm" href="#beranda">&larr; Beranda</a>
+          </div>
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th scope="col">Nomor DO</th>
+                  <th scope="col">Penerima</th>
+                  <th scope="col">Ekspedisi</th>
+                  <th scope="col">Status</th>
+                  <th scope="col" style="width: 28%;">Progres</th>
+                  <th scope="col">Update terakhir</th>
+                </tr>
+              </thead>
+              <tbody id="monitoringBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Panel LAPORAN: Rekap Bahan Ajar -->
+        <section class="panel" id="panel-rekap" aria-labelledby="rekapTitle" hidden>
+          <div class="card-head">
+            <h2 id="rekapTitle">Rekap Bahan Ajar</h2>
+            <a class="btn btn-ghost btn-sm" href="#beranda">&larr; Beranda</a>
+          </div>
+          <div class="stats" id="rekapStats"></div>
+          <div class="split" style="margin-top: 1.4rem;">
+            <article class="card">
+              <h3>Stok per judul</h3>
+              <p class="muted small">Batang merah berarti stok di bawah <span data-low-limit></span> eksemplar.</p>
+              <div class="bar-list" id="rekapBars"></div>
+            </article>
+            <article class="card">
+              <h3>Per jenis barang</h3>
+              <div class="table-wrap">
+                <table class="table" style="min-width: 0;">
+                  <thead>
+                    <tr><th scope="col">Jenis</th><th scope="col" class="num">Judul</th><th scope="col" class="num">Stok</th></tr>
+                  </thead>
+                  <tbody id="rekapJenis"></tbody>
+                </table>
+              </div>
+              <p class="small muted" style="margin-top: .8rem;">Data mengikuti halaman Informasi Bahan Ajar, termasuk judul yang kamu tambahkan sendiri.</p>
+            </article>
+          </div>
+        </section>
+
+        <!-- Panel HISTORI TRANSAKSI -->
+        <section class="panel card" id="panel-histori" aria-labelledby="histTitle" hidden>
+          <div class="card-head">
+            <h2 id="histTitle">Histori Transaksi Bahan Ajar</h2>
+            <div style="display: flex; gap: .6rem; flex-wrap: wrap;">
+              <label class="sr-only" for="histSearch">Cari transaksi</label>
+              <input class="input" type="search" id="histSearch" placeholder="Cari nama / nomor DO" style="width: 220px;">
+              <a class="btn btn-ghost btn-sm" href="#beranda">&larr; Beranda</a>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th scope="col">Tanggal kirim</th>
+                  <th scope="col">Nomor DO</th>
+                  <th scope="col">Penerima</th>
+                  <th scope="col">Paket</th>
+                  <th scope="col">Ekspedisi</th>
+                  <th scope="col" class="num">Total</th>
+                  <th scope="col">Status</th>
+                </tr>
+              </thead>
+              <tbody id="historiBody"></tbody>
+              <tfoot>
+                <tr><th scope="row" colspan="5">Total nilai transaksi</th><td class="num" id="historiTotal" style="font-weight: 700;">-</td><td></td></tr>
+              </tfoot>
+            </table>
+          </div>
+        </section>
+      </main>
+
+      <footer class="page-foot">SITTA &middot; simulasi front-end untuk Tugas Praktik 1 Pemrograman Berbasis Web</footer>
+    </div>
+  </div>
+
+  <!-- Modal konfirmasi (dipakai ulang oleh fungsi confirmBox di script.js) -->
+  <div class="modal" id="modalConfirm" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle" hidden>
+    <div class="modal-box">
+      <h2 id="confirmTitle">Yakin?</h2>
+      <p id="confirmText" class="muted"></p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" data-confirm="no">Batal</button>
+        <button type="button" class="btn btn-danger" data-confirm="yes">Ya, lanjut</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+</body>
+</html>

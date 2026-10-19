@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Lacak pengiriman bahan ajar UT berdasarkan nomor Delivery Order.">
+  <title>Tracking Pengiriman | SITTA</title>
+  <link rel="icon" href="assets/logo-sitta.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+
+  <!-- CSS internal: stepper status dan timeline perjalanan -->
+  <style>
+    .search-card form { display: flex; gap: .7rem; align-items: start; flex-wrap: wrap; }
+    .search-card .field { flex: 1 1 260px; margin: 0; }
+    .search-card .btn { margin-top: 1.72rem; }
+    .chips { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; margin-top: .9rem; font-size: .85rem; }
+    .chip {
+      border: 1px solid var(--line); background: var(--card); color: var(--ink);
+      border-radius: 999px; padding: .25em .8em; cursor: pointer; font: inherit; font-size: .82rem;
+    }
+    .chip:hover { border-color: var(--clay); color: var(--clay); }
+
+    .result-head { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; align-items: start; }
+    .result-head .do-no { font-family: var(--font-head); font-size: 1.5rem; margin: 0; }
+
+    .stepper { list-style: none; padding: 0; margin: 1.6rem 0 .6rem; display: grid; grid-template-columns: repeat(5, 1fr); counter-reset: step; }
+    .stepper li { position: relative; text-align: center; font-size: .8rem; color: var(--muted); padding-top: 2.6rem; }
+    .stepper li::before {
+      counter-increment: step; content: counter(step);
+      position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      width: 2rem; height: 2rem; border-radius: 50%;
+      display: grid; place-items: center;
+      background: var(--sand); color: var(--muted); font-weight: 700; z-index: 1;
+    }
+    .stepper li::after {
+      content: ""; position: absolute; top: 1rem; left: -50%; width: 100%; height: 3px;
+      background: var(--sand);
+    }
+    .stepper li:first-child::after { display: none; }
+    .stepper li.done { color: var(--ink); font-weight: 600; }
+    .stepper li.done::before { content: "✓"; background: var(--forest-2); color: #fff; }
+    .stepper li.done::after { background: var(--forest-2); }
+    .stepper li.current::before { background: var(--clay); color: #fff; box-shadow: 0 0 0 5px var(--clay-soft); }
+
+    .detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: .9rem; margin: 0; }
+    .detail-grid div { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: .8rem 1rem; }
+    .detail-grid dt { font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+    .detail-grid dd { margin: .2rem 0 0; font-weight: 600; }
+
+    .timeline { list-style: none; margin: 0; padding: 0 0 0 1.4rem; border-left: 2px dashed var(--line); }
+    .timeline li { position: relative; padding: 0 0 1.1rem .4rem; }
+    .timeline li::before {
+      content: ""; position: absolute; left: -1.85rem; top: .3rem;
+      width: .8rem; height: .8rem; border-radius: 50%;
+      background: var(--card); border: 3px solid var(--forest-2);
+    }
+    .timeline li:last-child::before { background: var(--clay); border-color: var(--clay); }
+    .timeline time { font-size: .8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .timeline p { margin: .15rem 0 0; }
+
+    .empty-state { text-align: center; padding: 2.5rem 1rem; color: var(--muted); }
+    .empty-state .big { font-size: 2.6rem; }
+
+    @media (max-width: 640px) {
+      .stepper { grid-template-columns: 1fr; gap: .6rem; }
+      .stepper li { text-align: left; padding: .3rem 0 .3rem 2.8rem; }
+      .stepper li::before { left: 0; top: 0; transform: none; }
+      .stepper li::after { display: none; }
+      .search-card .btn { margin-top: 0; width: 100%; }
+    }
+  </style>
+
+  <script src="js/data.js" defer></script>
+  <script src="js/script.js" defer></script>
+</head>
+<body data-page="tracking">
+  <div class="app">
+    <aside class="sidebar" id="sidebar" aria-label="Navigasi utama">
+      <a class="brand" href="dashboard.html">
+        <img src="assets/logo-sitta.svg" alt="" width="40" height="40">
+        <div><strong>SITTA</strong><span>Bahan Ajar UT</span></div>
+      </a>
+      <nav class="nav" aria-label="Menu samping">
+        <a href="dashboard.html"><span class="ico" aria-hidden="true">🏠</span>Beranda</a>
+        <p class="nav-label">Menu utama</p>
+        <a href="stok.html"><span class="ico" aria-hidden="true">📚</span>Informasi Bahan Ajar</a>
+        <a href="tracking.html" aria-current="page"><span class="ico" aria-hidden="true">🚚</span>Tracking Pengiriman</a>
+        <details>
+          <summary><span class="ico" aria-hidden="true">📊</span>Laporan</summary>
+          <div class="sub">
+            <a href="dashboard.html#monitoring">Monitoring Progress DO</a>
+            <a href="dashboard.html#rekap">Rekap Bahan Ajar</a>
+          </div>
+        </details>
+        <a href="dashboard.html#histori"><span class="ico" aria-hidden="true">🧾</span>Histori Transaksi</a>
+      </nav>
+      <p class="sidebar-foot">Tugas Praktik 1 &middot; STSI4209</p>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <button type="button" class="icon-btn menu-toggle" data-menu-toggle aria-label="Buka menu" aria-controls="sidebar">☰</button>
+        <p class="page-title">Tracking Pengiriman</p>
+        <span class="spacer"></span>
+        <span class="clock" data-clock></span>
+        <button type="button" class="icon-btn" data-theme-toggle aria-label="Ganti mode terang/gelap">🌙</button>
+        <div class="user-chip">
+          <span class="avatar" data-user-initial>?</span>
+          <span class="who"><b data-user-name>-</b><small data-user-role>-</small></span>
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm" data-logout>Keluar</button>
+      </header>
+
+      <main class="content">
+        <section class="card search-card" aria-labelledby="trackTitle">
+          <h1 id="trackTitle" style="font-size: 1.5rem;">Lacak paket bahan ajar</h1>
+          <p class="muted">Nomor Delivery Order (DO) terdiri dari 10 digit angka dan tercetak di bukti pemesanan.</p>
+          <form id="trackForm" novalidate>
+            <div class="field">
+              <label for="doInput">Nomor Delivery Order</label>
+              <input class="input" type="text" id="doInput" inputmode="numeric" maxlength="10" placeholder="contoh: 2023001234" autocomplete="off" aria-describedby="doInputErr">
+              <p class="error-msg" id="doInputErr" role="alert"></p>
+            </div>
+            <button type="submit" class="btn btn-primary">Cari</button>
+          </form>
+          <div class="chips" id="doSuggest"></div>
+          <div class="chips" id="doRecent"></div>
+        </section>
+
+        <div id="trackResult" aria-live="polite">
+          <div class="card empty-state">
+            <div class="big" aria-hidden="true">📦</div>
+            <p>Hasil pelacakan akan muncul di sini.</p>
+          </div>
+        </div>
+      </main>
+
+      <footer class="page-foot">SITTA &middot; simulasi front-end untuk Tugas Praktik 1 Pemrograman Berbasis Web</footer>
+    </div>
+  </div>
+
+  <div class="modal" id="modalConfirm" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle" hidden>
+    <div class="modal-box">
+      <h2 id="confirmTitle">Yakin?</h2>
+      <p id="confirmText" class="muted"></p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" data-confirm="no">Batal</button>
+        <button type="button" class="btn btn-danger" data-confirm="yes">Ya, lanjut</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+</body>
+</html>
